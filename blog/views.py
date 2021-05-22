@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Post
+from .models import Post,Comment
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import (
 ListView,
@@ -75,7 +75,42 @@ class PostDeleteView(LoginRequiredMixin,UserPassesTestMixin , DeleteView):
         return False    
 
 def about(request):
-    return render(request,'about.html')        
+    return render(request,'about.html') 
+
+
+def post_detail(request, year, month, day, post):
+    post =get_object_or_404(Post, slug=post,
+                                   status='published',
+                                   publish_year=year, 
+                                   publish_month=month,
+                                   publish_day=day)
+
+    # List of active comments for this post 
+    comments = post.comments.filter(active=True)
+
+
+    new_comment = None
+    
+    if request.method == 'POST':
+        # A comment was posted
+        comment_form = CommentForm(data=request.POST)
+        if comment_form.is_valid():
+            new_comment = comment_form.save(commit=False)
+            # Assign the current post to the comment
+            new_comment.post = post
+            # Save the comment to the database 
+            new_comment.save()
+            
+    else:
+        comment_form = CommentForm()
+    return render(request,
+                 'blog/post/detail.html',
+                 {'post': post,
+                 'comments': comments,
+                 'new_comment': new_comment, 
+                 'comment_form': comment_form})
+
+
 
 
 
