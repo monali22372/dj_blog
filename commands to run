@@ -1,0 +1,3 @@
+python manage.py runserver
+follow link to open blog in browser
+perform various actions like create post,update post,add comment.
